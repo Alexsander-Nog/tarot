@@ -121,42 +121,46 @@ export default function App() {
     // Persist lead (non-blocking; keep UX unchanged)
     void (async () => {
       try {
-        await saveLead({
-          contact: {
-            name: data.name,
-            email: data.email,
-            whatsapp: data.whatsapp,
-          },
-          consent: data.consent,
-          birth: {
-            fullName: birthFullName,
-            date: userData.birthDate,
-            time: userData.birthTime,
-            city: userData.birthCity,
-          },
-          quiz: {
-            scores,
-            profileId,
-          },
-        });
-      } catch (err) {
-        console.error("Failed to save lead to Firestore", err);
-      }
-
-      // Optional: send result email via Google Apps Script webhook (works on Firebase free plan)
-      if (import.meta.env.VITE_EMAIL_WEBHOOK_URL?.trim()) {
         try {
-          await sendQuizResultEmailViaAppsScript({
-            to: data.email,
-            name: data.name,
-            profileId,
-            scores,
-            whatsappBusinessNumber: import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER?.trim(),
-            sex: userSex,
+          await saveLead({
+            contact: {
+              name: data.name,
+              email: data.email,
+              whatsapp: data.whatsapp,
+            },
+            consent: data.consent,
+            birth: {
+              fullName: birthFullName,
+              date: userData.birthDate,
+              time: userData.birthTime,
+              city: userData.birthCity,
+            },
+            quiz: {
+              scores,
+              profileId,
+            },
           });
         } catch (err) {
-          console.error("Failed to send quiz result email (Apps Script)", err);
+          console.error("Failed to save lead to Firestore", err);
         }
+
+        // Optional: send result email via Google Apps Script webhook (works on Firebase free plan)
+        if (import.meta.env.VITE_EMAIL_WEBHOOK_URL?.trim()) {
+          try {
+            await sendQuizResultEmailViaAppsScript({
+              to: data.email,
+              name: data.name,
+              profileId,
+              scores,
+              whatsappBusinessNumber: import.meta.env.VITE_WHATSAPP_BUSINESS_NUMBER?.trim(),
+              sex: userSex,
+            });
+          } catch (err) {
+            console.error("Failed to send quiz result email (Apps Script)", err);
+          }
+        }
+      } catch (err) {
+        console.error("Lead capture background task failed", err);
       }
     })();
 
