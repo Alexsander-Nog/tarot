@@ -1,5 +1,25 @@
 # Astrologia Quiz (Vite + React)
 
+## Deploy (Vercel)
+1. Vercel → **Add New Project** → importe o repo do GitHub.
+2. Em **Settings → Environment Variables**, adicione as mesmas variáveis do seu `.env.local`.
+3. Deploy.
+
+Env vars (produção):
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_EMAIL_WEBHOOK_URL`
+- `VITE_EMAIL_WEBHOOK_TOKEN` (se configurado no Apps Script)
+- `VITE_WHATSAPP_BUSINESS_NUMBER` (opcional)
+
+Notas:
+- Este app é SPA; o `vercel.json` já inclui rewrite para `index.html`.
+- Não commite `.env.local` (já está no `.gitignore`).
+
 ## Setup
 1. Create `.env.local` based on `.env.example` and fill with your Firebase **Web App** config.
 2. Install deps and run.
