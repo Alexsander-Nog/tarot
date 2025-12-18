@@ -1,0 +1,106 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isNonEmptyString(v, minLen, maxLen) {
+      return v is string && v.size() >= minLen && v.size() <= maxLen;
+    }
+
+    function isOptionalString(v, maxLen) {
+      return !(v in [null]) && (v is string && v.size() <= maxLen);
+    }
+
+    function isEmail(v) {
+      return v is string
+        && v.size() >= 5
+        && v.size() <= 254
+        && v.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    function isPhoneLoose(v) {
+      // Allows digits plus common formatting characters.
+      return v is string
+        && v.size() >= 8
+        && v.size() <= 30
+        && v.matches('^[0-9+()\\-\\s]{8,30}$');
+    }
+
+    function isIsoDate(v) {
+      return v is string && v.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isIsoTime(v) {
+      // HTML <input type="time"> usually produces HH:MM
+      return v is string && v.matches('^\\d{2}:\\d{2}$');
+    }
+
+    function isValidScores(scores) {
+      return scores is map
+        && scores.keys().hasOnly(['fogo', 'terra', 'ar', 'agua'])
+        && scores.fogo is int && scores.fogo >= 0 && scores.fogo <= 100
+        && scores.terra is int && scores.terra >= 0 && scores.terra <= 100
+        && scores.ar is int && scores.ar >= 0 && scores.ar <= 100
+        && scores.agua is int && scores.agua >= 0 && scores.agua <= 100;
+    }
+
+    function isValidProfileId(v) {
+      return v in ['fogo', 'terra', 'ar', 'agua', 'fenix'];
+    }
+
+    function isValidMeta(meta) {
+      return meta is map
+        && meta.keys().hasOnly(['userAgent', 'language', 'referrer', 'pathname', 'href'])
+        && (meta.userAgent == null || (meta.userAgent is string && meta.userAgent.size() <= 500))
+        && (meta.language == null || (meta.language is string && meta.language.size() <= 50))
+        && (meta.referrer == null || (meta.referrer is string && meta.referrer.size() <= 500))
+        && (meta.pathname == null || (meta.pathname is string && meta.pathname.size() <= 300))
+        && (meta.href == null || (meta.href is string && meta.href.size() <= 500));
+    }
+
+    function isValidBirth(birth) {
+      return birth is map
+        && birth.keys().hasOnly(['date', 'time', 'city', 'fullName'])
+        && (birth.fullName == null || isNonEmptyString(birth.fullName, 2, 80))
+        && (birth.city == null || isNonEmptyString(birth.city, 2, 80))
+        && (birth.date == null || isIsoDate(birth.date))
+        && (birth.time == null || isIsoTime(birth.time));
+    }
+
+    function isValidContact(contact) {
+      return contact is map
+        && contact.keys().hasOnly(['name', 'email', 'whatsapp'])
+        && isNonEmptyString(contact.name, 2, 80)
+        && isEmail(contact.email)
+        && isPhoneLoose(contact.whatsapp);
+    }
+
+    function isValidQuiz(quiz) {
+      return quiz is map
+        && quiz.keys().hasOnly(['scores', 'profileId'])
+        && isValidScores(quiz.scores)
+        && isValidProfileId(quiz.profileId);
+    }
+
+    function isValidLeadCreate() {
+      return request.resource.data.keys().hasOnly(['contact', 'consent', 'birth', 'quiz', 'meta', 'createdAt'])
+        && isValidContact(request.resource.data.contact)
+        && request.resource.data.consent is bool
+        && isValidBirth(request.resource.data.birth)
+        && isValidQuiz(request.resource.data.quiz)
+        && isValidMeta(request.resource.data.meta)
+        // Require server timestamp semantics.
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /leads/{leadId} {
+      allow create: if isValidLeadCreate();
+      allow read, update, delete: if false;
+    }
+
+    // Default-deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# env
+.env.local
+
+# deps/build
+node_modules/
+dist/
+
+# firebase local
+.firebase/
+firebase-debug.log
+
+# functions build artifacts
+functions/node_modules/
+functions/lib/
