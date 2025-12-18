@@ -23,6 +23,14 @@ function safeString_(v, maxLen) {
   return s.length > maxLen ? s.slice(0, maxLen) : s;
 }
 
+function safeLargeString_(v, maxLen) {
+  if (typeof v !== "string") return "";
+  // Don't trim HTML/text bodies; trimming can remove intentional whitespace.
+  const s = v;
+  if (!s) return "";
+  return s.length > maxLen ? s.slice(0, maxLen) : s;
+}
+
 function isEmail_(v) {
   return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
 }
@@ -81,11 +89,15 @@ function doPost(e) {
     const subject = safeString_(payload.subject, 160) || (profileName ? ("Seu resultado: " + profileName) : "Seu resultado do Quiz");
 
     // If the frontend sends a full HTML body, use it; otherwise fall back to the basic template.
-    const htmlBody = safeString_(payload.htmlBody, 50000) || buildHtml_(payload);
+    // Apps Script can receive large payloads; keep a safety cap but allow more than 50k.
+    const htmlBody = safeLargeString_(payload.htmlBody, 250000) || buildHtml_(payload);
+    // Plain-text fallback for clients that strip HTML.
+    const textBody = safeLargeString_(payload.textBody, 100000) || "";
 
     MailApp.sendEmail({
       to: to,
       subject: subject,
+      body: textBody || " ",
       htmlBody: htmlBody,
       replyTo: CONTACT_EMAIL,
       name: "Soraiá Tarot",

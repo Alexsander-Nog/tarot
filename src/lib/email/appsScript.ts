@@ -35,7 +35,7 @@ function buildEmailHtml(args: {
   profileId: string;
   scores: ElementScores;
   whatsappBusinessNumber?: string;
-}): { subject: string; htmlBody: string; profileName: string } {
+}): { subject: string; htmlBody: string; textBody: string; profileName: string } {
   const profile = profiles[args.profileId] ?? profiles.fenix;
 
   const safeName = escapeHtml(args.userName || "");
@@ -100,7 +100,45 @@ function buildEmailHtml(args: {
   <p style="margin:14px 0 0;font-size:12px;color:#6b7280;">Se precisar, responda este email para falar com: contato.soraiatarot@gmail.com</p>
 </div>`;
 
-  return { subject, htmlBody, profileName: profile.name };
+  const textBody = [
+    `${dear} ${args.userName},`,
+    "",
+    `Seu perfil astral revelado foi: ${profile.title} (${profile.name}).`,
+    "",
+    profile.description,
+    "",
+    "ANÁLISE DO SEU SIGNO AMOROSO",
+    "Forças:",
+    ...profile.strengths.map((s) => `- ${s}`),
+    "",
+    "Desafios:",
+    ...profile.challenges.map((c) => `- ${c}`),
+    "",
+    `Padrão oculto: ${profile.hiddenPattern}`,
+    "",
+    "SUAS 3 CARTAS DO AMOR",
+    ...profile.tarotCards.map((c, idx) => `${idx + 1}. ${c.name} — ${c.meaning}`),
+    "",
+    "RITUAL DE ATRAÇÃO PERSONALIZADO",
+    profile.ritual,
+    "",
+    "ORIENTAÇÕES PARA OS PRÓXIMOS 30 DIAS",
+    ...profile.weeklyGuidance.map((g) => `Semana ${g.week}: ${g.guidance}`),
+    "",
+    "Sua pontuação",
+    `Fogo: ${Number(scores.fogo ?? 0)}`,
+    `Terra: ${Number(scores.terra ?? 0)}`,
+    `Ar: ${Number(scores.ar ?? 0)}`,
+    `Água: ${Number(scores.agua ?? 0)}`,
+    waLink ? "" : null,
+    waLink ? `WhatsApp: ${waLink}` : null,
+    "",
+    "Se precisar, responda este email para falar com: contato.soraiatarot@gmail.com",
+  ]
+    .filter((line): line is string => typeof line === "string")
+    .join("\n");
+
+  return { subject, htmlBody, textBody, profileName: profile.name };
 }
 
 function getWebhookConfig(): { url: string; token?: string } {
@@ -120,7 +158,7 @@ export async function sendQuizResultEmailViaAppsScript(payload: AppsScriptQuizEm
   // `no-cors` => we can't read the response, but the request is sent.
   const fullUrl = token ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}` : url;
 
-  const { subject, htmlBody, profileName } = buildEmailHtml({
+  const { subject, htmlBody, textBody, profileName } = buildEmailHtml({
     userName: payload.name,
     sex: payload.sex,
     profileId: payload.profileId,
@@ -132,6 +170,7 @@ export async function sendQuizResultEmailViaAppsScript(payload: AppsScriptQuizEm
     to: payload.to,
     subject,
     htmlBody,
+    textBody,
     // keep these for backwards compatibility / debugging
     name: payload.name,
     profileId: payload.profileId,
