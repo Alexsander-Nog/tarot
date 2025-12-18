@@ -44,7 +44,6 @@ function buildEmailHtml(args: {
   const description = escapeHtml(profile.description);
 
   const waLink = buildWhatsAppLink(args.whatsappBusinessNumber, profile.name);
-  const scores = args.scores;
 
   const tarotItems = profile.tarotCards
     .map((card, idx) => {
@@ -58,25 +57,24 @@ function buildEmailHtml(args: {
     .map((item) => `<li style="margin:6px 0;"><b>Semana ${item.week}:</b> ${escapeHtml(item.guidance)}</li>`)
     .join("");
 
-  const strengths = profile.strengths.map((s) => `<li style="margin:4px 0;">${escapeHtml(s)}</li>`).join("");
-  const challenges = profile.challenges.map((c) => `<li style="margin:4px 0;">${escapeHtml(c)}</li>`).join("");
+  const strength = escapeHtml(profile.strengths[0] ?? "");
+  const challenge = escapeHtml(profile.challenges[0] ?? "");
 
   const dear = args.sex === "masculino" ? "Querido" : args.sex === "feminino" ? "Querida" : "Olá";
   const subject = `Seu resultado: ${profile.name}`;
 
   const htmlBody = `
 <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;">
-  <p style="font-size:16px;">${dear} <b>${safeName}</b>,</p>
-  <p style="font-size:16px;">Seu perfil astral revelado foi: <b>${profileTitle}</b> (${profileName}).</p>
-  <p style="font-size:15px;">${description}</p>
+  <h2 style="margin:0 0 10px;">SEU PERFIL ASTRAL REVELADO</h2>
+  <h3 style="margin:0 0 14px;">${profileTitle}</h3>
+  <p style="font-size:16px;margin:0 0 10px;">${dear} <b>${safeName}</b>,</p>
+  <p style="font-size:15px;margin:0 0 10px;">${description}</p>
 
   <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0;"/>
 
   <h3 style="margin:0 0 8px;">ANÁLISE DO SEU SIGNO AMOROSO</h3>
-  <p style="margin:0 0 8px;"><b>✨ Forças:</b></p>
-  <ul style="margin:0 0 10px;padding-left:18px;">${strengths}</ul>
-  <p style="margin:0 0 8px;"><b>⚠️ Desafios:</b></p>
-  <ul style="margin:0 0 10px;padding-left:18px;">${challenges}</ul>
+  <p style="margin:0 0 8px;"><b>✨ Força:</b> ${strength}</p>
+  <p style="margin:0 0 8px;"><b>⚠️ Desafio:</b> ${challenge}</p>
   <p style="margin:0 0 10px;"><b>🔍 Padrão oculto:</b> ${escapeHtml(profile.hiddenPattern)}</p>
 
   <h3 style="margin:16px 0 8px;">SUAS 3 CARTAS DO AMOR</h3>
@@ -88,14 +86,6 @@ function buildEmailHtml(args: {
   <h3 style="margin:16px 0 8px;">ORIENTAÇÕES PARA OS PRÓXIMOS 30 DIAS</h3>
   <ul style="margin:0 0 10px;padding-left:18px;">${guidanceItems}</ul>
 
-  <h3 style="margin:16px 0 8px;">Sua pontuação</h3>
-  <ul style="margin:0 0 10px;padding-left:18px;">
-    <li>Fogo: <b>${Number(scores.fogo ?? 0)}</b></li>
-    <li>Terra: <b>${Number(scores.terra ?? 0)}</b></li>
-    <li>Ar: <b>${Number(scores.ar ?? 0)}</b></li>
-    <li>Água: <b>${Number(scores.agua ?? 0)}</b></li>
-  </ul>
-
   ${waLink ? `<p style="margin:16px 0 0;"><a href="${waLink}">Falar no WhatsApp</a></p>` : ""}
   <p style="margin:14px 0 0;font-size:12px;color:#6b7280;">Se precisar, responda este email para falar com: contato.soraiatarot@gmail.com</p>
 </div>`;
@@ -103,16 +93,14 @@ function buildEmailHtml(args: {
   const textBody = [
     `${dear} ${args.userName},`,
     "",
-    `Seu perfil astral revelado foi: ${profile.title} (${profile.name}).`,
+    "SEU PERFIL ASTRAL REVELADO",
+    `${profile.title} (${profile.name})`,
     "",
     profile.description,
     "",
     "ANÁLISE DO SEU SIGNO AMOROSO",
-    "Forças:",
-    ...profile.strengths.map((s) => `- ${s}`),
-    "",
-    "Desafios:",
-    ...profile.challenges.map((c) => `- ${c}`),
+    `Força: ${profile.strengths[0] ?? ""}`,
+    `Desafio: ${profile.challenges[0] ?? ""}`,
     "",
     `Padrão oculto: ${profile.hiddenPattern}`,
     "",
@@ -124,12 +112,6 @@ function buildEmailHtml(args: {
     "",
     "ORIENTAÇÕES PARA OS PRÓXIMOS 30 DIAS",
     ...profile.weeklyGuidance.map((g) => `Semana ${g.week}: ${g.guidance}`),
-    "",
-    "Sua pontuação",
-    `Fogo: ${Number(scores.fogo ?? 0)}`,
-    `Terra: ${Number(scores.terra ?? 0)}`,
-    `Ar: ${Number(scores.ar ?? 0)}`,
-    `Água: ${Number(scores.agua ?? 0)}`,
     waLink ? "" : null,
     waLink ? `WhatsApp: ${waLink}` : null,
     "",

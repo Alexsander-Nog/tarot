@@ -39,12 +39,6 @@ function buildHtml_(payload) {
   const name = safeString_(payload.name, 80) || "";
   const profileName = safeString_(payload.profileName, 120) || safeString_(payload.profileId, 30) || "";
 
-  const scores = payload.scores || {};
-  const fogo = Number(scores.fogo || 0);
-  const terra = Number(scores.terra || 0);
-  const ar = Number(scores.ar || 0);
-  const agua = Number(scores.agua || 0);
-
   const whatsappNumber = safeString_(payload.whatsappBusinessNumber, 32);
   const waLink = whatsappNumber
     ? "https://wa.me/" + whatsappNumber.replace(/\D/g, "") + "?text=" + encodeURIComponent(
@@ -57,13 +51,6 @@ function buildHtml_(payload) {
       "<h2>Seu resultado do Quiz</h2>" +
       (name ? ("<p>Olá, <b>" + name + "</b>!</p>") : "") +
       "<p>Seu perfil amoroso foi: <b>" + profileName + "</b></p>" +
-      "<h3>Pontuação</h3>" +
-      "<ul>" +
-        "<li>Fogo: " + fogo + "</li>" +
-        "<li>Terra: " + terra + "</li>" +
-        "<li>Ar: " + ar + "</li>" +
-        "<li>Água: " + agua + "</li>" +
-      "</ul>" +
       (waLink ? ("<p><a href=\"" + waLink + "\">Falar no WhatsApp</a></p>") : "") +
       "<hr/>" +
       "<p>Se precisar, responda este email para falar com: " + CONTACT_EMAIL + "</p>" +
