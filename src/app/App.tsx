@@ -91,8 +91,15 @@ export default function App() {
       (element) => finalScores[element as keyof Scores] === maxScore
     );
 
-    // If there's a tie or mixed scores, return fenix
-    if (dominantElements.length > 1 || maxScore < 15) {
+    // If there's a tie, return fenix
+    if (dominantElements.length > 1) {
+      return "fenix";
+    }
+
+    // If scores are too mixed/low, return fenix (adaptive threshold)
+    const totalScore = Object.values(finalScores).reduce((sum, v) => sum + v, 0);
+    const minDominance = Math.ceil(totalScore * 0.4);
+    if (maxScore < minDominance) {
       return "fenix";
     }
 
